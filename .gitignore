@@ -1,0 +1,12 @@
+node_modules
+dist
+.vite
+*.local
+.env
+.env.*
+!.env.example
+
+# Generated Bible data (large files)
+public/data/books/
+public/audio/
+public/alignment/
