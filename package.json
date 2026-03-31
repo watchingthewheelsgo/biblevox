@@ -10,7 +10,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "bible:download": "npx tsx scripts/download-bible.ts",
-    "bible:generate": "npx tsx scripts/generate-audio.ts"
+    "bible:generate": "npx tsx scripts/generate-audio.ts",
+    "i18n:template": "npx tsx scripts/generate-i18n-template.ts"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",

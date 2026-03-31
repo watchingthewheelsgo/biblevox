@@ -3,12 +3,13 @@ import { base64ToBlob } from "@/lib/audioBase64";
 import { loadSavedVoices, removeVoice, saveVoice, setSelectedVoiceId } from "@/lib/savedVoices";
 import type { SavedVoice } from "@/types/voice";
 import { HeadphonesIcon, ChevronRightIcon } from "@/components/Icons";
+import { useI18n } from "@/i18n/provider";
 
 const LANGUAGES = [
-  { value: "en-US", label: "English" },
-  { value: "zh-CN", label: "中文" },
-  { value: "ja", label: "日本語" },
-  { value: "ko", label: "한국어" },
+  { value: "en-US", key: "lang.en" },
+  { value: "zh-CN", key: "lang.zh" },
+  { value: "ja", key: "lang.ja" },
+  { value: "es", key: "lang.es" },
 ];
 
 function newId() {
@@ -16,6 +17,7 @@ function newId() {
 }
 
 export function VoiceStudioPage() {
+  const { t } = useI18n();
   const [tab, setTab] = useState<"design" | "clone">("design");
   const [apiOk, setApiOk] = useState<boolean | null>(null);
   const [saved, setSaved] = useState<SavedVoice[]>(() => loadSavedVoices());
@@ -34,35 +36,34 @@ export function VoiceStudioPage() {
       <header className="animate-fade-in-up">
         <div className="flex items-center gap-3 mb-2">
           <HeadphonesIcon className="w-6 h-6 text-accent/60" />
-          <h1 className="text-2xl font-bold tracking-tight">Voice Studio</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("voice.title")}</h1>
         </div>
         <p className="text-sm text-text-secondary">
-          WaveSpeed Qwen3：用文字描述设计音色，或上传/录制短音频进行克隆。
+          {t("voice.subtitle")}
         </p>
         {apiOk === false && (
           <p className="text-xs text-amber-500/90 mt-2 glass rounded-lg px-3 py-2 border border-amber-500/20">
-            后端未配置 <code className="text-amber-400">WAVESPEED_API_KEY</code> 或未启动 API。
-            请运行 <code className="text-amber-400">npm run dev</code>（会同时启动 Vite 与 API），并在项目根目录 <code className="text-amber-400">.env</code> 中设置密钥。
+            {t("voice.apiNotReady")}
           </p>
         )}
         {apiOk === true && (
-          <p className="text-xs text-emerald-500/80 mt-2">API 已连接 · WaveSpeed 密钥已配置</p>
+          <p className="text-xs text-emerald-500/80 mt-2">{t("voice.apiReady")}</p>
         )}
       </header>
 
       <div className="flex gap-2 animate-fade-in-up delay-100">
-        {(["design", "clone"] as const).map((t) => (
+        {(["design", "clone"] as const).map((tabKey) => (
           <button
-            key={t}
+            key={tabKey}
             type="button"
-            onClick={() => setTab(t)}
+            onClick={() => setTab(tabKey)}
             className={`px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all ${
-              tab === t
+              tab === tabKey
                 ? "bg-accent text-bg-primary shadow-lg shadow-accent/20"
                 : "glass text-text-secondary hover:text-text-primary"
             }`}
           >
-            {t === "design" ? "Voice Design" : "Voice Clone"}
+            {tabKey === "design" ? t("voice.designTab") : t("voice.cloneTab")}
           </button>
         ))}
       </div>
@@ -75,11 +76,11 @@ export function VoiceStudioPage() {
 
       <section className="animate-fade-in-up delay-200">
         <h2 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-text-muted mb-3">
-          已保存的音色
+          {t("voice.saved")}
         </h2>
         {saved.length === 0 ? (
           <p className="text-sm text-text-muted text-center py-8 glass rounded-xl">
-            暂无保存的音色。创建后可前往阅读页选择使用。
+            {t("voice.emptySaved")}
           </p>
         ) : (
           <ul className="space-y-2">
@@ -91,7 +92,7 @@ export function VoiceStudioPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-medium text-text-primary truncate">{v.name}</p>
                   <p className="text-[11px] text-text-muted">
-                    {v.kind === "design" ? "Design" : "Clone"} · {v.language}
+                    {v.kind === "design" ? t("voice.kind.design") : t("voice.kind.clone")} · {v.language}
                   </p>
                 </div>
                 <button
@@ -101,7 +102,7 @@ export function VoiceStudioPage() {
                   }}
                   className="text-[11px] font-medium text-accent hover:text-accent-hover px-2 py-1"
                 >
-                  选用
+                  {t("voice.use")}
                 </button>
                 <button
                   type="button"
@@ -111,7 +112,7 @@ export function VoiceStudioPage() {
                   }}
                   className="text-[11px] text-text-muted hover:text-red-400 px-2"
                 >
-                  删除
+                  {t("voice.delete")}
                 </button>
               </li>
             ))}
@@ -129,6 +130,7 @@ function VoiceDesignPanel({
   onSaved: () => void;
   apiOk: boolean | null;
 }) {
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const [voiceDescription, setVoiceDescription] = useState("");
   const [sampleText, setSampleText] = useState(
@@ -149,7 +151,7 @@ function VoiceDesignPanel({
         body: JSON.stringify({ voiceDescription, sampleText, language }),
       });
       const data = (await res.json()) as { error?: string; audioBase64?: string; mime?: string };
-      if (!res.ok) throw new Error(data.error ?? "请求失败");
+      if (!res.ok) throw new Error(data.error ?? t("voice.toast.requestFailed"));
       if (data.audioBase64) {
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         const blob = base64ToBlob(data.audioBase64, data.mime ?? "audio/mpeg");
@@ -175,32 +177,32 @@ function VoiceDesignPanel({
     saveVoice(v);
     setSelectedVoiceId(v.id);
     onSaved();
-    alert("已保存。在阅读页可选择该音色朗读。");
+    alert(t("voice.toast.savedDesign"));
   };
 
   return (
     <div className="space-y-5 glass rounded-2xl p-6 animate-fade-in-up delay-100">
       <label className="block">
-        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">音色名称</span>
+        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">{t("voice.form.name")}</span>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="例如：沉稳男声朗读"
+          placeholder={t("voice.form.namePlaceholderDesign")}
           className="mt-1.5 w-full px-4 py-2.5 rounded-xl bg-bg-secondary/80 border border-border text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/40"
         />
       </label>
       <label className="block">
-        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">音色描述（Voice Design）</span>
+        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">{t("voice.form.designDescription")}</span>
         <textarea
           value={voiceDescription}
           onChange={(e) => setVoiceDescription(e.target.value)}
           rows={4}
-          placeholder="例如：A calm, elderly British male narrator with warm, clear diction suitable for scripture."
+          placeholder={t("voice.form.designDescriptionPlaceholder")}
           className="mt-1.5 w-full px-4 py-3 rounded-xl bg-bg-secondary/80 border border-border text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/40 resize-none"
         />
       </label>
       <label className="block">
-        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">试听文案</span>
+        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">{t("voice.form.sampleText")}</span>
         <textarea
           value={sampleText}
           onChange={(e) => setSampleText(e.target.value)}
@@ -209,14 +211,14 @@ function VoiceDesignPanel({
         />
       </label>
       <label className="block">
-        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">语言</span>
+        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">{t("voice.form.language")}</span>
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
           className="mt-1.5 w-full px-4 py-2.5 rounded-xl bg-bg-secondary/80 border border-border text-sm text-text-primary"
         >
           {LANGUAGES.map((l) => (
-            <option key={l.value} value={l.value}>{l.label}</option>
+            <option key={l.value} value={l.value}>{t(l.key)}</option>
           ))}
         </select>
       </label>
@@ -227,7 +229,7 @@ function VoiceDesignPanel({
           onClick={generatePreview}
           className="px-4 py-2.5 rounded-xl bg-bg-elevated text-text-primary text-sm font-medium border border-border hover:border-accent/30 disabled:opacity-40"
         >
-          {loading ? "生成中…" : "生成试听"}
+          {loading ? t("voice.form.generating") : t("voice.form.generatePreview")}
         </button>
         {previewUrl && (
           <audio ref={audioRef} src={previewUrl} controls className="h-10 flex-1 min-w-[200px]" />
@@ -239,7 +241,7 @@ function VoiceDesignPanel({
         disabled={!name.trim() || !voiceDescription.trim()}
         className="w-full py-3 rounded-xl bg-accent text-bg-primary font-semibold text-sm hover:bg-accent-hover disabled:opacity-40 transition-colors"
       >
-        保存音色
+        {t("voice.form.saveDesign")}
       </button>
     </div>
   );
@@ -252,6 +254,7 @@ function VoiceClonePanel({
   onSaved: () => void;
   apiOk: boolean | null;
 }) {
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const [sampleText, setSampleText] = useState(
     "Hello, this is my cloned voice reading the Holy Bible.",
@@ -272,7 +275,7 @@ function VoiceClonePanel({
       fd.append("file", f);
       const res = await fetch("/api/voice/media/upload", { method: "POST", body: fd });
       const data = (await res.json()) as { download_url?: string; error?: string };
-      if (!res.ok) throw new Error(data.error ?? "上传失败");
+      if (!res.ok) throw new Error(data.error ?? t("voice.toast.uploadFailed"));
       if (data.download_url) setReferenceUrl(data.download_url);
     } catch (e) {
       alert(e instanceof Error ? e.message : String(e));
@@ -291,7 +294,7 @@ function VoiceClonePanel({
 
   const generatePreview = async () => {
     if (!referenceUrl || !sampleText.trim()) {
-      alert("请先上传参考音频（约 3–15 秒）");
+      alert(t("voice.toast.needReference"));
       return;
     }
     setLoading(true);
@@ -307,7 +310,7 @@ function VoiceClonePanel({
         }),
       });
       const data = (await res.json()) as { error?: string; audioBase64?: string; mime?: string };
-      if (!res.ok) throw new Error(data.error ?? "请求失败");
+      if (!res.ok) throw new Error(data.error ?? t("voice.toast.requestFailed"));
       if (data.audioBase64) {
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         const blob = base64ToBlob(data.audioBase64, data.mime ?? "audio/mpeg");
@@ -322,7 +325,7 @@ function VoiceClonePanel({
 
   const handleSave = () => {
     if (!name.trim() || !referenceUrl) {
-      alert("请填写名称并上传参考音频");
+      alert(t("voice.toast.needNameAndReference"));
       return;
     }
     const v: SavedVoice = {
@@ -337,24 +340,24 @@ function VoiceClonePanel({
     saveVoice(v);
     setSelectedVoiceId(v.id);
     onSaved();
-    alert("已保存。在阅读页可选择该克隆音色朗读。");
+    alert(t("voice.toast.savedClone"));
   };
 
   return (
     <div className="space-y-5 glass rounded-2xl p-6 animate-fade-in-up delay-100">
       <label className="block">
-        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">音色名称</span>
+        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">{t("voice.form.name")}</span>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="例如：我的声音"
+          placeholder={t("voice.form.namePlaceholderClone")}
           className="mt-1.5 w-full px-4 py-2.5 rounded-xl bg-bg-secondary/80 border border-border text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/40"
         />
       </label>
       <div>
-        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">参考音频</span>
+        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">{t("voice.form.referenceAudio")}</span>
         <p className="text-[11px] text-text-muted mt-1 mb-2">
-          上传 WAV / MP3 / WebM 等短片段（建议 5–30 秒）。将先上传到 WaveSpeed 再用于克隆。
+          {t("voice.form.referenceAudioHint")}
         </p>
         <input
           ref={fileInputRef}
@@ -369,24 +372,24 @@ function VoiceClonePanel({
           disabled={uploading || apiOk === false}
           className="px-4 py-2.5 rounded-xl bg-bg-elevated text-sm border border-border hover:border-accent/30 disabled:opacity-40"
         >
-          {uploading ? "上传中…" : file ? file.name : "选择文件"}
+          {uploading ? t("voice.form.uploading") : file ? file.name : t("voice.form.selectFile")}
         </button>
         {referenceUrl && (
-          <p className="text-[10px] text-emerald-500/70 mt-2 truncate break-all">参考音频已就绪</p>
+          <p className="text-[10px] text-emerald-500/70 mt-2 truncate break-all">{t("voice.form.referenceReady")}</p>
         )}
       </div>
       <label className="block">
-        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">参考文案（可选，与录音内容一致更佳）</span>
+        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">{t("voice.form.referenceText")}</span>
         <textarea
           value={referenceText}
           onChange={(e) => setReferenceText(e.target.value)}
           rows={2}
-          placeholder="若你朗读了某段固定文字，可在此填写，有助于对齐。"
+          placeholder={t("voice.form.referenceTextPlaceholder")}
           className="mt-1.5 w-full px-4 py-2.5 rounded-xl bg-bg-secondary/80 border border-border text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/40 resize-none"
         />
       </label>
       <label className="block">
-        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">试听文案（TTS 内容）</span>
+        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">{t("voice.form.sampleTextClone")}</span>
         <textarea
           value={sampleText}
           onChange={(e) => setSampleText(e.target.value)}
@@ -395,14 +398,14 @@ function VoiceClonePanel({
         />
       </label>
       <label className="block">
-        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">语言</span>
+        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">{t("voice.form.language")}</span>
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
           className="mt-1.5 w-full px-4 py-2.5 rounded-xl bg-bg-secondary/80 border border-border text-sm text-text-primary"
         >
           {LANGUAGES.map((l) => (
-            <option key={l.value} value={l.value}>{l.label}</option>
+            <option key={l.value} value={l.value}>{t(l.key)}</option>
           ))}
         </select>
       </label>
@@ -413,7 +416,7 @@ function VoiceClonePanel({
           onClick={generatePreview}
           className="px-4 py-2.5 rounded-xl bg-bg-elevated text-text-primary text-sm font-medium border border-border hover:border-accent/30 disabled:opacity-40"
         >
-          {loading ? "生成中…" : "生成试听"}
+          {loading ? t("voice.form.generating") : t("voice.form.generatePreview")}
         </button>
         {previewUrl && (
           <audio src={previewUrl} controls className="h-10 flex-1 min-w-[200px]" />
@@ -425,7 +428,7 @@ function VoiceClonePanel({
         disabled={!name.trim() || !referenceUrl}
         className="w-full py-3 rounded-xl bg-accent text-bg-primary font-semibold text-sm hover:bg-accent-hover disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
       >
-        保存克隆音色
+        {t("voice.form.saveClone")}
         <ChevronRightIcon className="w-4 h-4" />
       </button>
     </div>

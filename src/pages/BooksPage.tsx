@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { BIBLE_BOOKS, getBooksByTestament } from "@/data/books";
 import type { BibleBook } from "@/types";
 import { ChevronRightIcon, BookOpenIcon } from "@/components/Icons";
+import { useI18n } from "@/i18n/provider";
 
 export function BooksPage() {
+  const { t } = useI18n();
   const [tab, setTab] = useState<"old" | "new">("old");
   const [expandedBook, setExpandedBook] = useState<string | null>(null);
   const books = getBooksByTestament(tab);
@@ -15,26 +17,26 @@ export function BooksPage() {
       <header className="mb-8 animate-fade-in-up">
         <div className="flex items-center gap-3 mb-2">
           <BookOpenIcon className="w-6 h-6 text-accent/60" />
-          <h1 className="text-2xl font-bold tracking-tight">The Holy Bible</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("books.title")}</h1>
         </div>
         <p className="text-sm text-text-secondary">
-          King James Version · {BIBLE_BOOKS.length} books · 1,189 chapters
+          {t("books.subtitle", { books: BIBLE_BOOKS.length })}
         </p>
       </header>
 
       {/* Testament Tabs */}
       <div className="flex gap-2 mb-6 animate-fade-in-up delay-100">
-        {(["old", "new"] as const).map((t) => (
+        {(["old", "new"] as const).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => { setTab(t); setExpandedBook(null); }}
+            key={tabKey}
+            onClick={() => { setTab(tabKey); setExpandedBook(null); }}
             className={`px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 ${
-              tab === t
+              tab === tabKey
                 ? "bg-accent text-bg-primary shadow-lg shadow-accent/20"
                 : "glass text-text-secondary hover:text-text-primary"
             }`}
           >
-            {t === "old" ? "Old Testament" : "New Testament"}
+            {tabKey === "old" ? t("books.old") : t("books.new")}
           </button>
         ))}
       </div>
@@ -56,6 +58,7 @@ export function BooksPage() {
 }
 
 function BookRow({ book, expanded, onToggle, index }: { book: BibleBook; expanded: boolean; onToggle: () => void; index: number }) {
+  const { t } = useI18n();
   return (
     <div style={{ animationDelay: `${Math.min(index * 20, 400)}ms` }} className="animate-fade-in-up">
       <button
@@ -69,7 +72,7 @@ function BookRow({ book, expanded, onToggle, index }: { book: BibleBook; expande
           <p className="text-[13px] font-medium text-text-primary">{book.name}</p>
         </div>
         <span className="text-[11px] text-text-muted mr-1">
-          {book.chapters} ch
+          {t("books.ch", { count: book.chapters })}
         </span>
         <ChevronRightIcon className={`w-4 h-4 text-text-muted/40 transition-transform duration-200 ${expanded ? "rotate-90" : ""}`} />
       </button>

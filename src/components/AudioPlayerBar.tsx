@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PlayIcon, PauseIcon, SkipBackIcon, SkipForwardIcon, SpeedIcon } from "./Icons";
+import { useI18n } from "@/i18n/provider";
 
 interface AudioPlayerBarProps {
   isPlaying: boolean;
@@ -39,6 +40,7 @@ export function AudioPlayerBar({
   subtitle,
   mode,
 }: AudioPlayerBarProps) {
+  const { t } = useI18n();
   const [speedIdx, setSpeedIdx] = useState(2);
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -80,7 +82,7 @@ export function AudioPlayerBar({
           )}
           {mode === "wavespeed" && (
             <p className="text-[10px] text-text-muted mb-3 text-center">
-              按节请求 WaveSpeed 合成并连续播放（较长章节会多次调用 API）
+              {t("player.wavespeedNote")}
             </p>
           )}
 
@@ -91,10 +93,10 @@ export function AudioPlayerBar({
               <p className="text-[11px] text-text-secondary truncate">
                 {subtitle}
                 {mode === "speech" && (
-                  <span className="ml-1.5 text-accent/50 italic">Browser Voice</span>
+                  <span className="ml-1.5 text-accent/50 italic">{t("player.browserVoice")}</span>
                 )}
                 {mode === "wavespeed" && (
-                  <span className="ml-1.5 text-accent/50 italic">WaveSpeed · 按节合成</span>
+                  <span className="ml-1.5 text-accent/50 italic">{t("player.wavespeedVoice")}</span>
                 )}
               </p>
             </div>

@@ -11,8 +11,10 @@ import { ChevronLeftIcon, ChevronRightIcon, BookOpenIcon } from "@/components/Ic
 import { getSelectedVoiceId, loadSavedVoices, setSelectedVoiceId } from "@/lib/savedVoices";
 import type { BibleChapter, ChapterAlignment } from "@/types";
 import type { SavedVoice } from "@/types/voice";
+import { useI18n } from "@/i18n/provider";
 
 export function ReaderPage() {
+  const { t } = useI18n();
   const { bookId = "", chapter: chapterStr = "1" } = useParams();
   const chapterNum = Number(chapterStr);
   const navigate = useNavigate();
@@ -142,9 +144,9 @@ export function ReaderPage() {
     return (
       <div className="max-w-2xl mx-auto px-5 pt-16 text-center">
         <BookOpenIcon className="w-12 h-12 text-text-muted/30 mx-auto mb-4" />
-        <p className="text-text-secondary mb-3">Book not found</p>
+        <p className="text-text-secondary mb-3">{t("reader.bookNotFound")}</p>
         <Link to="/books" className="text-accent text-sm font-medium hover:text-accent-hover transition-colors">
-          Browse all books
+          {t("reader.browseAllBooks")}
         </Link>
       </div>
     );
@@ -162,7 +164,7 @@ export function ReaderPage() {
         </Link>
         <div className="flex-1 min-w-0">
           <h1 className="text-lg font-bold text-text-primary truncate">{book.name}</h1>
-          <p className="text-[11px] text-text-secondary">Chapter {chapterNum} of {book.chapters}</p>
+          <p className="text-[11px] text-text-secondary">{t("reader.chapterOf", { chapter: chapterNum, total: book.chapters })}</p>
         </div>
         <div className="flex items-center gap-0.5">
           <button
@@ -191,7 +193,7 @@ export function ReaderPage() {
       {!useStaticAudio && chapterData && (
         <div className="mb-6 glass rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 animate-fade-in-up">
           <label className="text-[11px] text-text-muted uppercase tracking-wide shrink-0">
-            朗读音色
+            {t("reader.voiceLabel")}
           </label>
           <select
             value={selectedVoiceId ?? ""}
@@ -201,7 +203,7 @@ export function ReaderPage() {
             }}
             className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-bg-secondary/80 border border-border text-[13px] text-text-primary focus:outline-none focus:border-accent/40"
           >
-            <option value="">浏览器语音（离线）</option>
+            <option value="">{t("reader.browserVoiceOffline")}</option>
             {savedVoices.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.name} ({v.kind === "design" ? "Design" : "Clone"})
@@ -213,7 +215,7 @@ export function ReaderPage() {
             className="text-xs text-accent hover:text-accent-hover whitespace-nowrap shrink-0"
             onClick={() => setVoiceListVersion((n) => n + 1)}
           >
-            管理音色 →
+            {t("reader.manageVoices")} →
           </Link>
         </div>
       )}
@@ -226,9 +228,9 @@ export function ReaderPage() {
       ) : !chapterData ? (
         <div className="text-center py-24">
           <BookOpenIcon className="w-10 h-10 text-text-muted/20 mx-auto mb-3" />
-          <p className="text-text-secondary text-sm mb-2">Chapter data not available</p>
+          <p className="text-text-secondary text-sm mb-2">{t("reader.dataUnavailable")}</p>
           <p className="text-[11px] text-text-muted">
-            Run <code className="text-accent/60 bg-accent/5 px-1.5 py-0.5 rounded">npm run bible:download</code> to download
+            {t("reader.runDownload")} <code className="text-accent/60 bg-accent/5 px-1.5 py-0.5 rounded">npm run bible:download</code> {t("reader.toDownload")}
           </p>
         </div>
       ) : (
@@ -237,7 +239,7 @@ export function ReaderPage() {
             <div className="inline-flex items-center gap-3 text-text-muted/30">
               <span className="w-8 h-px bg-current" />
               <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-accent/40">
-                Chapter {chapterNum}
+                {t("reader.chapter", { chapter: chapterNum })}
               </span>
               <span className="w-8 h-px bg-current" />
             </div>
@@ -271,7 +273,7 @@ export function ReaderPage() {
                 className="glass rounded-xl px-4 py-3 text-[12px] font-medium text-text-secondary hover:text-accent hover:border-border-accent transition-all flex items-center gap-1"
               >
                 <ChevronLeftIcon className="w-3.5 h-3.5" />
-                Chapter {chapterNum - 1}
+                {t("reader.prevChapter", { chapter: chapterNum - 1 })}
               </Link>
             ) : <div />}
             {chapterNum < book.chapters ? (
@@ -279,7 +281,7 @@ export function ReaderPage() {
                 to={`/read/${bookId}/${chapterNum + 1}`}
                 className="glass rounded-xl px-4 py-3 text-[12px] font-medium text-text-secondary hover:text-accent hover:border-border-accent transition-all flex items-center gap-1"
               >
-                Chapter {chapterNum + 1}
+                {t("reader.nextChapter", { chapter: chapterNum + 1 })}
                 <ChevronRightIcon className="w-3.5 h-3.5" />
               </Link>
             ) : <div />}
@@ -287,12 +289,12 @@ export function ReaderPage() {
 
           {!useStaticAudio && !useWaveSpeed && (
             <p className="text-[11px] text-text-muted/40 mt-8 text-center italic">
-              点击经文收听 · 浏览器语音合成
+              {t("reader.clickToListen")}
             </p>
           )}
           {useWaveSpeed && (
             <p className="text-[11px] text-text-muted/50 mt-8 text-center">
-              已选择 WaveSpeed 音色：点击任意节或按播放键，将逐节调用云端 TTS（需配置 API 密钥）。
+              {t("reader.wavespeedHint")}
             </p>
           )}
         </div>
@@ -321,8 +323,8 @@ export function ReaderPage() {
           title={`${book.name} ${chapterNum}`}
           subtitle={
             useWaveSpeed && selectedVoice
-              ? `${chapterData.verses.length} 节 · ${selectedVoice.name}`
-              : `${chapterData.verses.length} verses`
+              ? t("reader.subtitleWithVoice", { count: chapterData.verses.length, voice: selectedVoice.name })
+              : t("reader.subtitleDefault", { count: chapterData.verses.length })
           }
           mode={playerMode}
         />

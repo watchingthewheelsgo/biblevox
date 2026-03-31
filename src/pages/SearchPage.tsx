@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { SearchIcon, ChevronRightIcon } from "@/components/Icons";
 import { BIBLE_BOOKS } from "@/data/books";
+import { useI18n } from "@/i18n/provider";
 
 const POPULAR_VERSES = [
   { ref: "John 3:16", link: "/read/john/3" },
@@ -15,6 +16,7 @@ const POPULAR_VERSES = [
 ];
 
 export function SearchPage() {
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
 
   const filteredBooks = useMemo(() => {
@@ -29,7 +31,7 @@ export function SearchPage() {
     <div className="max-w-2xl mx-auto px-5 pt-10 pb-8 space-y-8">
       {/* Header */}
       <header className="animate-fade-in-up">
-        <h1 className="text-2xl font-bold tracking-tight mb-4">Search</h1>
+        <h1 className="text-2xl font-bold tracking-tight mb-4">{t("search.title")}</h1>
 
         {/* Search Input */}
         <div className="relative">
@@ -38,7 +40,7 @@ export function SearchPage() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search books, chapters..."
+            placeholder={t("search.placeholder")}
             className="w-full pl-11 pr-4 py-3 glass rounded-xl text-[14px] text-text-primary placeholder-text-muted/60 focus:outline-none focus:border-accent/40 transition-colors"
           />
         </div>
@@ -58,7 +60,7 @@ export function SearchPage() {
                   <div className="flex-1">
                     <p className="text-[13px] font-medium text-text-primary">{book.name}</p>
                     <p className="text-[11px] text-text-muted">
-                      {book.chapters} chapters · {book.testament === "old" ? "Old" : "New"} Testament
+                      {book.chapters} {t("books.chapterShort")} · {book.testament === "old" ? t("search.old") : t("search.new")}
                     </p>
                   </div>
                   <ChevronRightIcon className="w-4 h-4 text-text-muted/40 group-hover:text-accent transition-colors" />
@@ -67,7 +69,7 @@ export function SearchPage() {
             </div>
           ) : (
             <p className="text-sm text-text-muted text-center py-8">
-              No books found for &ldquo;{query}&rdquo;
+              {t("search.noResult", { query })}
             </p>
           )}
         </section>
@@ -77,7 +79,7 @@ export function SearchPage() {
       {!query.trim() && (
         <section className="animate-fade-in-up delay-100">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
-            Popular Verses
+            {t("search.popular")}
           </h2>
           <div className="flex flex-wrap gap-2">
             {POPULAR_VERSES.map((v) => (
@@ -97,19 +99,19 @@ export function SearchPage() {
       {!query.trim() && (
         <section className="animate-fade-in-up delay-200">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
-            Quick Access
+            {t("search.quick")}
           </h2>
           <div className="grid grid-cols-2 gap-3">
             <Link to="/books" className="group">
               <div className="glass rounded-xl p-4 hover:border-border-accent transition-all">
-                <p className="text-[13px] font-semibold text-text-primary mb-0.5">Old Testament</p>
-                <p className="text-[11px] text-text-secondary">39 books</p>
+                <p className="text-[13px] font-semibold text-text-primary mb-0.5">{t("search.old")}</p>
+                <p className="text-[11px] text-text-secondary">{t("search.bookCount", { count: 39 })}</p>
               </div>
             </Link>
             <Link to="/books" className="group">
               <div className="glass rounded-xl p-4 hover:border-border-accent transition-all">
-                <p className="text-[13px] font-semibold text-text-primary mb-0.5">New Testament</p>
-                <p className="text-[11px] text-text-secondary">27 books</p>
+                <p className="text-[13px] font-semibold text-text-primary mb-0.5">{t("search.new")}</p>
+                <p className="text-[11px] text-text-secondary">{t("search.bookCount", { count: 27 })}</p>
               </div>
             </Link>
           </div>
