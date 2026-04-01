@@ -155,7 +155,7 @@ export async function uploadMediaToWaveSpeed(params: {
 }): Promise<string> {
   const { apiKey, fileBuffer, filename, contentType } = params;
   const form = new FormData();
-  const blob = new Blob([fileBuffer], { type: contentType });
+  const blob = new Blob([new Uint8Array(fileBuffer)], { type: contentType });
   form.append("file", blob, filename);
 
   const res = await fetch(`${WAVESPEED_API_BASE}/media/upload/binary`, {
