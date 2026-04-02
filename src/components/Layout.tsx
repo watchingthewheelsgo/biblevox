@@ -2,17 +2,35 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import { HomeIcon, BookOpenIcon, SpeakerIcon, SearchIcon, HeadphonesIcon } from "./Icons";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { useI18n } from "@/i18n/provider";
+import { authClient } from "@/lib/auth-client";
 
 export function Layout() {
   const { pathname } = useLocation();
   const { t } = useI18n();
+  const { data: session } = authClient.useSession();
 
   return (
     <div className="min-h-screen flex flex-col">
       <div className="bg-radial-glow fixed inset-0 pointer-events-none" />
 
       <main className="flex-1 pb-20 relative z-10">
-        <div className="max-w-2xl mx-auto px-5 pt-3 flex justify-end">
+        <div className="max-w-2xl mx-auto px-5 pt-3 flex justify-end items-center gap-2">
+          {session?.user ? (
+            <button
+              type="button"
+              onClick={() => authClient.signOut()}
+              className="text-[11px] px-2.5 py-1.5 rounded-lg bg-bg-secondary text-text-secondary hover:text-text-primary"
+            >
+              {session.user.emailVerified ? "Verified" : "Unverified"}
+            </button>
+          ) : (
+            <Link
+              to="/auth"
+              className="text-[11px] px-2.5 py-1.5 rounded-lg bg-bg-secondary text-text-secondary hover:text-text-primary"
+            >
+              Sign In
+            </Link>
+          )}
           <LanguageSwitcher />
         </div>
         <Outlet />

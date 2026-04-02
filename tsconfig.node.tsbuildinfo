@@ -1,1 +1,1 @@
-{"root":["./vite.config.ts","./scripts/download-bible.ts","./scripts/generate-audio.ts","./scripts/generate-i18n-template.ts","./server/index.ts","./server/wavespeed-qwen3.ts"],"version":"5.8.3"}
+{"root":["./vite.config.ts","./scripts/download-bible.ts","./scripts/generate-audio.ts","./scripts/generate-i18n-template.ts","./server/auth.ts","./server/chapter-access.ts","./server/creem.ts","./server/gemini-tts.ts","./server/index.ts","./server/wavespeed-qwen3.ts","./server/db/index.ts","./server/db/init.ts","./server/db/schema.ts"],"version":"5.8.3"}

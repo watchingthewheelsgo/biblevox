@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { base64ToBlob } from "@/lib/audioBase64";
-import { loadSavedVoices, removeVoice, saveVoice, setSelectedVoiceId } from "@/lib/savedVoices";
+import { setSelectedVoiceId } from "@/lib/savedVoices";
 import type { SavedVoice } from "@/types/voice";
 import { HeadphonesIcon, ChevronRightIcon } from "@/components/Icons";
 import { useI18n } from "@/i18n/provider";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 const LANGUAGES = [
   { value: "en-US", key: "lang.en" },
@@ -12,17 +13,26 @@ const LANGUAGES = [
   { value: "es", key: "lang.es" },
 ];
 
-function newId() {
-  return `v_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-}
-
 export function VoiceStudioPage() {
   const { t } = useI18n();
   const [tab, setTab] = useState<"design" | "clone">("design");
   const [apiOk, setApiOk] = useState<boolean | null>(null);
-  const [saved, setSaved] = useState<SavedVoice[]>(() => loadSavedVoices());
+  const [saved, setSaved] = useState<SavedVoice[]>([]);
+  const { data: entitlements, refresh: refreshEntitlements } = useEntitlements();
 
-  const refresh = useCallback(() => setSaved(loadSavedVoices()), []);
+  const refresh = useCallback(async () => {
+    const res = await fetch("/api/voice-presets", { credentials: "include" });
+    if (!res.ok) {
+      setSaved([]);
+      return;
+    }
+    const data = (await res.json()) as { items: SavedVoice[] };
+    setSaved(data.items ?? []);
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   useEffect(() => {
     fetch("/api/health")
@@ -69,9 +79,9 @@ export function VoiceStudioPage() {
       </div>
 
       {tab === "design" ? (
-        <VoiceDesignPanel onSaved={refresh} apiOk={apiOk} />
+        <VoiceDesignPanel onSaved={refresh} onSpentCredit={refreshEntitlements} apiOk={apiOk} />
       ) : (
-        <VoiceClonePanel onSaved={refresh} apiOk={apiOk} />
+        <VoiceClonePanel onSaved={refresh} onSpentCredit={refreshEntitlements} apiOk={apiOk} />
       )}
 
       <section className="animate-fade-in-up delay-200">
@@ -107,8 +117,10 @@ export function VoiceStudioPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    removeVoice(v.id);
-                    refresh();
+                    fetch(`/api/voice-presets/${v.id}`, {
+                      method: "DELETE",
+                      credentials: "include",
+                    }).then(() => void refresh());
                   }}
                   className="text-[11px] text-text-muted hover:text-red-400 px-2"
                 >
@@ -119,15 +131,22 @@ export function VoiceStudioPage() {
           </ul>
         )}
       </section>
+      <p className="text-xs text-text-muted">
+        {entitlements?.unlockedAll
+          ? "Unlocked. You can create and save voice presets."
+          : "Locked. Purchase $30 unlock all chapters first to create voice presets."}
+      </p>
     </div>
   );
 }
 
 function VoiceDesignPanel({
   onSaved,
+  onSpentCredit,
   apiOk,
 }: {
-  onSaved: () => void;
+  onSaved: () => Promise<void>;
+  onSpentCredit: () => Promise<void>;
   apiOk: boolean | null;
 }) {
   const { t } = useI18n();
@@ -164,19 +183,27 @@ function VoiceDesignPanel({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim() || !voiceDescription.trim()) return;
-    const v: SavedVoice = {
-      id: newId(),
-      name: name.trim(),
-      kind: "design",
-      voiceDescription: voiceDescription.trim(),
-      language,
-      createdAt: Date.now(),
-    };
-    saveVoice(v);
-    setSelectedVoiceId(v.id);
-    onSaved();
+    const res = await fetch("/api/voice-presets", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim(),
+        kind: "design",
+        voiceDescription: voiceDescription.trim(),
+        language,
+      }),
+    });
+    const data = (await res.json()) as { id?: string; error?: string };
+    if (!res.ok) {
+      alert(data.error ?? t("voice.toast.requestFailed"));
+      return;
+    }
+    if (data.id) setSelectedVoiceId(data.id);
+    await onSaved();
+    await onSpentCredit();
     alert(t("voice.toast.savedDesign"));
   };
 
@@ -249,9 +276,11 @@ function VoiceDesignPanel({
 
 function VoiceClonePanel({
   onSaved,
+  onSpentCredit,
   apiOk,
 }: {
-  onSaved: () => void;
+  onSaved: () => Promise<void>;
+  onSpentCredit: () => Promise<void>;
   apiOk: boolean | null;
 }) {
   const { t } = useI18n();
@@ -323,23 +352,31 @@ function VoiceClonePanel({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim() || !referenceUrl) {
       alert(t("voice.toast.needNameAndReference"));
       return;
     }
-    const v: SavedVoice = {
-      id: newId(),
-      name: name.trim(),
-      kind: "clone",
-      referenceAudioUrl: referenceUrl,
-      referenceText: referenceText.trim() || undefined,
-      language,
-      createdAt: Date.now(),
-    };
-    saveVoice(v);
-    setSelectedVoiceId(v.id);
-    onSaved();
+    const res = await fetch("/api/voice-presets", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim(),
+        kind: "clone",
+        referenceAudioUrl: referenceUrl,
+        referenceText: referenceText.trim() || undefined,
+        language,
+      }),
+    });
+    const data = (await res.json()) as { id?: string; error?: string };
+    if (!res.ok) {
+      alert(data.error ?? t("voice.toast.requestFailed"));
+      return;
+    }
+    if (data.id) setSelectedVoiceId(data.id);
+    await onSaved();
+    await onSpentCredit();
     alert(t("voice.toast.savedClone"));
   };
 

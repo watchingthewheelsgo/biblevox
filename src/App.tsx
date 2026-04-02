@@ -6,6 +6,7 @@ import { ReaderPage } from "@/pages/ReaderPage";
 import { ListenPage } from "@/pages/ListenPage";
 import { SearchPage } from "@/pages/SearchPage";
 import { VoiceStudioPage } from "@/pages/VoiceStudioPage";
+import { AuthPage } from "@/pages/AuthPage";
 
 export function App() {
   return (
@@ -16,6 +17,7 @@ export function App() {
         <Route path="listen" element={<ListenPage />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="voices" element={<VoiceStudioPage />} />
+        <Route path="auth" element={<AuthPage />} />
         <Route path="read/:bookId/:chapter" element={<ReaderPage />} />
       </Route>
     </Routes>

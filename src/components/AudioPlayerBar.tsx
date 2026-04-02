@@ -14,7 +14,7 @@ interface AudioPlayerBarProps {
   onSpeedChange: (speed: number) => void;
   title: string;
   subtitle: string;
-  mode: "audio" | "speech" | "wavespeed";
+  mode: "audio" | "wavespeed" | "gemini";
 }
 
 function formatTime(sec: number): string {
@@ -85,6 +85,11 @@ export function AudioPlayerBar({
               {t("player.wavespeedNote")}
             </p>
           )}
+          {mode === "gemini" && (
+            <p className="text-[10px] text-text-muted mb-3 text-center">
+              {t("player.geminiNote")}
+            </p>
+          )}
 
           <div className="flex items-center gap-3">
             {/* Info */}
@@ -92,8 +97,8 @@ export function AudioPlayerBar({
               <p className="text-[13px] font-medium text-text-primary truncate">{title}</p>
               <p className="text-[11px] text-text-secondary truncate">
                 {subtitle}
-                {mode === "speech" && (
-                  <span className="ml-1.5 text-accent/50 italic">{t("player.browserVoice")}</span>
+                {mode === "gemini" && (
+                  <span className="ml-1.5 text-accent/50 italic">{t("player.geminiVoice")}</span>
                 )}
                 {mode === "wavespeed" && (
                   <span className="ml-1.5 text-accent/50 italic">{t("player.wavespeedVoice")}</span>
@@ -103,7 +108,7 @@ export function AudioPlayerBar({
 
             {/* Controls */}
             <div className="flex items-center gap-0.5">
-              {(mode === "audio" || mode === "wavespeed") && (
+              {(mode === "audio" || mode === "wavespeed" || mode === "gemini") && (
                 <button
                   onClick={cycleSpeed}
                   className="px-2 py-1.5 rounded-lg text-[11px] font-semibold text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors flex items-center gap-0.5"
